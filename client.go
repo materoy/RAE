@@ -35,20 +35,10 @@ func runClient() {
 
 	data, done := <-doneChan
 	if done {
-		fmt.Println(*data.Reply.(*string))
+		fmt.Println("Execution done ...")
+		fmt.Println(*(data.Reply.(*string)))
 	} else {
 		fmt.Println("No value was read from channel")
 	}
-
-	// select {
-	// case data, done := <-doneChan:
-	// 	if done {
-	// 		fmt.Println(*data.Reply.(*string))
-	// 	} else {
-	// 		fmt.Println("Channel closed")
-	// 	}
-	// default:
-	// 	fmt.Println("No values returned, moving on.")
-	// }
 
 }
