@@ -1,2 +1,2 @@
-# RAC
-RAC (Remote Application Call), execute your local applications remotely 
+# RAE
+RAE (Remote Application Execution), execute your local applications remotely 
