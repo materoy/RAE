@@ -6,14 +6,14 @@ import (
 	"net/rpc"
 )
 
-func runClient() {
+func runClient(path string) {
 
 	client, err := rpc.DialHTTP("tcp", "localhost:1234")
 	if err != nil {
 		log.Fatal("dialing:", err)
 	}
 
-	path := "/home/redview/go/src/github.com/rmgen/distributed_computation/data/distribute.exec"
+	// path := "/home/redview/go/src/github.com/rmgen/distributed_computation/data/distribute.exec"
 
 	program := Program{
 		Name:           "Helloworld",
