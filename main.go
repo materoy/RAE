@@ -17,7 +17,7 @@ func readFile(path *string) []byte {
 
 func main() {
 	isServer := flag.Bool("server", false, "")
-	program := flag.String("program", "data/distribute.exec", "Path to program to execute")
+	program := flag.String("program", "samples/hello_world/hello_world", "Path to program to execute")
 	host := flag.String("host", getOutBoundIP().String(), "Hostname for the node to connect to")
 	port := flag.Int("port", 8001, "Port to connect via to the node")
 	flag.Parse()

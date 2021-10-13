@@ -13,3 +13,8 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# Sample programs
+
+# samples/stream_text/stream_text
+# samples/hello_world/hello_world
