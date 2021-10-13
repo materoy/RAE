@@ -41,5 +41,8 @@ func runRPCserver(port *int) error {
 
 	go http.Serve(l, nil)
 
-	select {}
+	for {
+		l.Accept()
+	}
+
 }
