@@ -10,7 +10,7 @@ import (
 )
 
 func getOutBoundIP() net.IP {
-	conn, err := net.Dial("tcp", "8.8.8.8:8")
+	conn, err := net.Dial("udp", "8.8.8.8:8")
 
 	if err != nil {
 		log.Fatal("Cannot get IP", err)
@@ -18,17 +18,19 @@ func getOutBoundIP() net.IP {
 
 	defer conn.Close()
 
-	localAddr := conn.LocalAddr().(*net.TCPAddr)
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
 
 	return localAddr.IP
 }
 
 func runRPCserver(port *int) error {
+	fmt.Println(getOutBoundIP())
+
 	prog := new(Program)
 	rpc.Register(prog)
 	rpc.HandleHTTP()
 
-	l, e := net.Listen("tcp", string(getOutBoundIP())+":"+strconv.Itoa(*port))
+	l, e := net.Listen("tcp", getOutBoundIP().String()+":"+strconv.Itoa(*port))
 
 	if e != nil {
 		log.Fatal("Listen error:", e)
