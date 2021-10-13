@@ -18,6 +18,8 @@ func readFile(path *string) []byte {
 func main() {
 	isServer := flag.Bool("server", false, "")
 	program := flag.String("program", "data/distribute.exec", "Path to program to execute")
+	host := flag.String("host", "127.0.0.1", "Hostname for the node to connect to")
+	port := flag.Int("port", 8001, "Port to connect via to the node")
 	flag.Parse()
 
 	if *isServer {
@@ -25,9 +27,9 @@ func main() {
 		// Only runs if a flag --server true has been passed
 		// I was thinking of placing it on a different package
 		// but aah thats what you get
-		runRPCserver()
+		runRPCserver(port)
 
 	} else {
-		runClient(*program)
+		runClient(host, port, program)
 	}
 }

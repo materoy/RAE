@@ -2,24 +2,23 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"net/rpc"
+	"strconv"
 )
 
-func runRPCserver() error {
+func runRPCserver(port *int) error {
 
 	prog := new(Program)
 	rpc.Register(prog)
 	rpc.HandleHTTP()
 
-	l, e := net.Listen("tcp", ":1234")
+	l, e := net.Listen("tcp", ":"+strconv.Itoa(*port))
 
 	if e != nil {
-		// log.Fatal("Listen error:", e)
-		if e.Error() != "listen tcp :1234: bind: address already in use" {
-			fmt.Println("Listen errror: ", e)
-		}
+		log.Fatal("Listen error:", e)
 		return e
 	}
 

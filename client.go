@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"log"
 	"net/rpc"
+	"strconv"
 )
 
-func runClient(path string) {
+func runClient(host *string, port *int, path *string) {
 
-	client, err := rpc.DialHTTP("tcp", "localhost:1234")
+	client, err := rpc.DialHTTP("tcp", *host+":"+strconv.Itoa(*port))
 	if err != nil {
 		log.Fatal("dialing:", err)
 	}
@@ -17,10 +18,10 @@ func runClient(path string) {
 
 	program := Program{
 		Name:           "Helloworld",
-		Executable:     readFile(&path),
+		Executable:     readFile(path),
 		ExecuteCommand: "",
 		Data:           "",
-		Path:           path,
+		Path:           *path,
 		Argv:           nil,
 	}
 
