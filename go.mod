@@ -1,3 +1,3 @@
-module rmgen/distributed_computation
+module rmgen/RAE
 
 go 1.17

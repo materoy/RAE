@@ -9,20 +9,6 @@ import (
 	"strconv"
 )
 
-func getOutBoundIP() net.IP {
-	conn, err := net.Dial("udp", "8.8.8.8:8")
-
-	if err != nil {
-		log.Fatal("Cannot get IP", err)
-	}
-
-	defer conn.Close()
-
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
-
-	return localAddr.IP
-}
-
 func runRPCserver(port *int) error {
 
 	prog := new(Program)
@@ -40,16 +26,17 @@ func runRPCserver(port *int) error {
 
 	go http.Serve(l, nil)
 
-	for {
-		conn, err := l.Accept()
+	select {}
+	// for {
+	// 	conn, err := l.Accept()
 
-		if err != nil {
-			fmt.Println("Server, Accept: ", err)
-			continue
-		}
+	// 	if err != nil {
+	// 		fmt.Println("Server, Accept: ", err)
+	// 		continue
+	// 	}
 
-		fmt.Printf("Connected to: %s, on Port %d \n", conn.RemoteAddr(), *port)
+	// 	fmt.Printf("Connected to: %s, on Port %d \n", conn.RemoteAddr(), *port)
 
-	}
+	// }
 
 }

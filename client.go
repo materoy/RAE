@@ -8,7 +8,6 @@ import (
 )
 
 func runClient(host *string, port *int, path *string) {
-
 	client, err := rpc.DialHTTP("tcp", *host+":"+strconv.Itoa(*port))
 	if err != nil {
 		log.Fatal("dialing:", err)
