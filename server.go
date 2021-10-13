@@ -24,7 +24,6 @@ func getOutBoundIP() net.IP {
 }
 
 func runRPCserver(port *int) error {
-	fmt.Println(getOutBoundIP())
 
 	prog := new(Program)
 	rpc.Register(prog)
@@ -42,7 +41,15 @@ func runRPCserver(port *int) error {
 	go http.Serve(l, nil)
 
 	for {
-		l.Accept()
+		conn, err := l.Accept()
+
+		if err != nil {
+			fmt.Println("Server, Accept: ", err)
+			continue
+		}
+
+		fmt.Printf("Connected to: %s, on Port %d \n", conn.RemoteAddr(), *port)
+
 	}
 
 }
