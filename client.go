@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/rpc"
 	"strconv"
+	"strings"
 )
 
 func runClient(host *string, port *int, path *string) {
@@ -15,8 +16,10 @@ func runClient(host *string, port *int, path *string) {
 
 	// path := "/home/redview/go/src/github.com/rmgen/distributed_computation/data/distribute.exec"
 
+	programPath := strings.Split(*path, "/")
+
 	program := Program{
-		Name:           "Helloworld",
+		Name:           programPath[len(programPath)-1],
 		Executable:     readFile(path),
 		ExecuteCommand: "",
 		Data:           "",

@@ -30,6 +30,7 @@ func main() {
 		runRPCserver(port)
 
 	} else {
+
 		runClient(host, port, program)
 	}
 }
