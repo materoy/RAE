@@ -27,7 +27,7 @@ func runClient(host *string, port *int, path *string) {
 		Argv:           nil,
 	}
 
-	var reply string
+	reply := make(chan string)
 	doneChan := make(chan *rpc.Call, 10)
 
 	execCall := client.Go("Program.Execute", program, &reply, doneChan)
@@ -39,7 +39,7 @@ func runClient(host *string, port *int, path *string) {
 	data, done := <-doneChan
 	if done {
 		fmt.Println("Execution done ...")
-		fmt.Println(*(data.Reply.(*string)))
+		fmt.Println(<-(*data.Reply.(*chan string)))
 	} else {
 		fmt.Println("No value was read from channel")
 	}

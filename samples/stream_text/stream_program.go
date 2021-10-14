@@ -10,8 +10,8 @@ import (
 every [T] seconds
 */
 func main() {
-	for {
-		fmt.Println("Hello world")
-		time.Sleep(time.Second * 2)
+	for i := 0; i < 5; i++ {
+		fmt.Println("Hello ", i)
+		time.Sleep(time.Second * 1)
 	}
 }
