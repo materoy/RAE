@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"os/exec"
+
+	pb "github.com/rmgen/rae/rpc/proto"
 )
 
 /** Program definition struct where
@@ -26,9 +28,9 @@ type Program struct {
 	Envv           []string
 }
 
-func (p *Program) Execute(data *Program, reply *chan string) error {
+func (p *Program) Execute(stream pb.StreamService_StartApplicationServer) error {
 
-	writeErr := os.WriteFile(data.Name, data.Executable, 0755)
+	writeErr := os.WriteFile(p.Name, p.Executable, 0755)
 	if writeErr != nil {
 		log.Fatal("Write error: ", writeErr)
 	}
@@ -45,7 +47,7 @@ func (p *Program) Execute(data *Program, reply *chan string) error {
 	// r, w := io.Pipe()
 	// Calls execve to execute program with given params
 
-	cmd := exec.Command("./" + data.Name)
+	cmd := exec.Command("./" + p.Name)
 	stdout, err := cmd.StdoutPipe()
 
 	if err != nil {
@@ -90,7 +92,7 @@ func (p *Program) Execute(data *Program, reply *chan string) error {
 			line, _, _ := buf.ReadLine()
 			output = string(line)
 			fmt.Println(output)
-			(*reply) <- output
+			stream.Send(&pb.Response{Result: output})
 		}
 	}()
 
@@ -104,7 +106,7 @@ func (p *Program) Execute(data *Program, reply *chan string) error {
 
 	}
 
-	defer os.Remove(data.Name)
+	defer os.Remove(p.Name)
 	return nil
 	// } else {
 	// 	// Any computation for the parent process should be handled here

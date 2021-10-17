@@ -6,7 +6,6 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"time"
 
 	pb "github.com/rmgen/rae/rpc/proto"
 	"google.golang.org/grpc"
@@ -22,8 +21,8 @@ func runClient(host *string, port *int, path *string) {
 	defer conn.Close()
 	client := pb.NewStreamServiceClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
-	defer cancel()
+	ctx := context.Background()
+	// defer cancel()
 
 	programPath := strings.Split(*path, "/")
 

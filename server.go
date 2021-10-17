@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"net/rpc"
 	"strconv"
 
 	pb "github.com/rmgen/rae/rpc/proto"
@@ -17,21 +16,22 @@ type server struct {
 }
 
 func (s *server) StartApplication(in *pb.Request, stream pb.StreamService_StartApplicationServer) error {
-	for i := 0; i < 4; i++ {
-		response := strconv.Itoa(i)
-		if err := stream.Send(&pb.Response{Result: response}); err != nil {
-			return err
-		}
+	program := Program{
+		Name:           in.Name,
+		Executable:     in.Executable,
+		ExecuteCommand: in.ExecuteCommand,
+		Data:           in.Data,
+		Path:           in.Path,
+		Argv:           in.Argv,
+		Envv:           in.Envv,
 	}
+
+	program.Execute(stream)
 
 	return nil
 }
 
 func runRPCserver(port *int) {
-
-	prog := new(Program)
-	rpc.Register(prog)
-	rpc.HandleHTTP()
 
 	l, e := net.Listen("tcp", getOutBoundIP().String()+":"+strconv.Itoa(*port))
 
@@ -48,19 +48,6 @@ func runRPCserver(port *int) {
 		log.Fatal("Failed to serve: ", err)
 	}
 
-	// go http.Serve(l, nil)
-
-	// select {}
-	// for {
-	// 	conn, err := l.Accept()
-
-	// 	if err != nil {
-	// 		fmt.Println("Server, Accept: ", err)
-	// 		continue
-	// 	}
-
 	// 	fmt.Printf("Connected to: %s, on Port %d \n", conn.RemoteAddr(), *port)
-
-	// }
 
 }
