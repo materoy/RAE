@@ -4,12 +4,19 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"net/http"
 	"net/rpc"
 	"strconv"
+
+	pb "github.com/rmgen/rae/rpc/proto"
+
+	"google.golang.org/grpc"
 )
 
-func runRPCserver(port *int) error {
+type server struct {
+	pb.UnimplementedStreamServiceServer
+}
+
+func runRPCserver(port *int) {
 
 	prog := new(Program)
 	rpc.Register(prog)
@@ -19,14 +26,20 @@ func runRPCserver(port *int) error {
 
 	if e != nil {
 		log.Fatal("Listen error:", e)
-		return e
 	}
+
+	s := grpc.NewServer()
+	pb.RegisterStreamServiceServer(s, &server{})
 
 	fmt.Printf("RPC Server listening on: %v\n", l.Addr().String())
 
-	go http.Serve(l, nil)
+	if err := s.Serve(l); err != nil {
+		log.Fatal("Failed to serve: ", err)
+	}
 
-	select {}
+	// go http.Serve(l, nil)
+
+	// select {}
 	// for {
 	// 	conn, err := l.Accept()
 

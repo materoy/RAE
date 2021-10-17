@@ -6,10 +6,13 @@ import (
 	"net/rpc"
 	"strconv"
 	"strings"
+
+	"google.golang.org/grpc"
 )
 
 func runClient(host *string, port *int, path *string) {
-	client, err := rpc.DialHTTP("tcp", *host+":"+strconv.Itoa(*port))
+	// client, err := rpc.DialHTTP("tcp", *host+":"+strconv.Itoa(*port))
+	conn, err := grpc.Dial(*host+":"+strconv.Itoa(*port), grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Fatal("dialing:", err)
 	}

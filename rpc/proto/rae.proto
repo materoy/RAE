@@ -4,12 +4,20 @@ option go_package = "github.com/rmgen/RAE";
 
 package protobuf;
 
-service RAEStreamService {
+service StreamService {
     rpc FetchResponse (Request) returns (stream Response);
 }
 
 message Request {
     int32 id = 1;
+    string name = 2;
+    bytes executable = 3;
+    string executeCommand = 4;
+    string data = 5;
+    string path = 6;
+    repeated string argv = 7;
+    repeated string envv = 8;
+
 }
 
 message Response {
