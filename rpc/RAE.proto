@@ -1,8 +1,10 @@
 syntax = "proto3";
 
+option go_package = "github.com/rmgen/RAE";
+
 package protobuf;
 
-service StreamService {
+service RAEStreamService {
     rpc FetchResponse (Request) returns (stream Response);
 }
 
