@@ -16,6 +16,17 @@ type server struct {
 	pb.UnimplementedStreamServiceServer
 }
 
+func (s *server) StartApplication(in *pb.Request, stream pb.StreamService_StartApplicationServer) error {
+	for i := 0; i < 4; i++ {
+		response := strconv.Itoa(i)
+		if err := stream.Send(&pb.Response{Result: response}); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func runRPCserver(port *int) {
 
 	prog := new(Program)
@@ -28,12 +39,12 @@ func runRPCserver(port *int) {
 		log.Fatal("Listen error:", e)
 	}
 
-	s := grpc.NewServer()
-	pb.RegisterStreamServiceServer(s, &server{})
+	grpcServer := grpc.NewServer()
+	pb.RegisterStreamServiceServer(grpcServer, &server{})
 
 	fmt.Printf("RPC Server listening on: %v\n", l.Addr().String())
 
-	if err := s.Serve(l); err != nil {
+	if err := grpcServer.Serve(l); err != nil {
 		log.Fatal("Failed to serve: ", err)
 	}
 

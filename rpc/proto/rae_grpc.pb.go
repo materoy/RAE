@@ -18,7 +18,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type StreamServiceClient interface {
-	FetchResponse(ctx context.Context, in *Request, opts ...grpc.CallOption) (StreamService_FetchResponseClient, error)
+	StartApplication(ctx context.Context, in *Request, opts ...grpc.CallOption) (StreamService_StartApplicationClient, error)
 }
 
 type streamServiceClient struct {
@@ -29,12 +29,12 @@ func NewStreamServiceClient(cc grpc.ClientConnInterface) StreamServiceClient {
 	return &streamServiceClient{cc}
 }
 
-func (c *streamServiceClient) FetchResponse(ctx context.Context, in *Request, opts ...grpc.CallOption) (StreamService_FetchResponseClient, error) {
-	stream, err := c.cc.NewStream(ctx, &StreamService_ServiceDesc.Streams[0], "/protobuf.StreamService/FetchResponse", opts...)
+func (c *streamServiceClient) StartApplication(ctx context.Context, in *Request, opts ...grpc.CallOption) (StreamService_StartApplicationClient, error) {
+	stream, err := c.cc.NewStream(ctx, &StreamService_ServiceDesc.Streams[0], "/protobuf.StreamService/StartApplication", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &streamServiceFetchResponseClient{stream}
+	x := &streamServiceStartApplicationClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -44,16 +44,16 @@ func (c *streamServiceClient) FetchResponse(ctx context.Context, in *Request, op
 	return x, nil
 }
 
-type StreamService_FetchResponseClient interface {
+type StreamService_StartApplicationClient interface {
 	Recv() (*Response, error)
 	grpc.ClientStream
 }
 
-type streamServiceFetchResponseClient struct {
+type streamServiceStartApplicationClient struct {
 	grpc.ClientStream
 }
 
-func (x *streamServiceFetchResponseClient) Recv() (*Response, error) {
+func (x *streamServiceStartApplicationClient) Recv() (*Response, error) {
 	m := new(Response)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -65,7 +65,7 @@ func (x *streamServiceFetchResponseClient) Recv() (*Response, error) {
 // All implementations must embed UnimplementedStreamServiceServer
 // for forward compatibility
 type StreamServiceServer interface {
-	FetchResponse(*Request, StreamService_FetchResponseServer) error
+	StartApplication(*Request, StreamService_StartApplicationServer) error
 	mustEmbedUnimplementedStreamServiceServer()
 }
 
@@ -73,8 +73,8 @@ type StreamServiceServer interface {
 type UnimplementedStreamServiceServer struct {
 }
 
-func (UnimplementedStreamServiceServer) FetchResponse(*Request, StreamService_FetchResponseServer) error {
-	return status.Errorf(codes.Unimplemented, "method FetchResponse not implemented")
+func (UnimplementedStreamServiceServer) StartApplication(*Request, StreamService_StartApplicationServer) error {
+	return status.Errorf(codes.Unimplemented, "method StartApplication not implemented")
 }
 func (UnimplementedStreamServiceServer) mustEmbedUnimplementedStreamServiceServer() {}
 
@@ -89,24 +89,24 @@ func RegisterStreamServiceServer(s grpc.ServiceRegistrar, srv StreamServiceServe
 	s.RegisterService(&StreamService_ServiceDesc, srv)
 }
 
-func _StreamService_FetchResponse_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _StreamService_StartApplication_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(Request)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(StreamServiceServer).FetchResponse(m, &streamServiceFetchResponseServer{stream})
+	return srv.(StreamServiceServer).StartApplication(m, &streamServiceStartApplicationServer{stream})
 }
 
-type StreamService_FetchResponseServer interface {
+type StreamService_StartApplicationServer interface {
 	Send(*Response) error
 	grpc.ServerStream
 }
 
-type streamServiceFetchResponseServer struct {
+type streamServiceStartApplicationServer struct {
 	grpc.ServerStream
 }
 
-func (x *streamServiceFetchResponseServer) Send(m *Response) error {
+func (x *streamServiceStartApplicationServer) Send(m *Response) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -119,8 +119,8 @@ var StreamService_ServiceDesc = grpc.ServiceDesc{
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "FetchResponse",
-			Handler:       _StreamService_FetchResponse_Handler,
+			StreamName:    "StartApplication",
+			Handler:       _StreamService_StartApplication_Handler,
 			ServerStreams: true,
 		},
 	},

@@ -5,11 +5,10 @@ option go_package = "github.com/rmgen/RAE";
 package protobuf;
 
 service StreamService {
-    rpc FetchResponse (Request) returns (stream Response);
+    rpc StartApplication (Request) returns (stream Response);
 }
 
 message Request {
-    int32 id = 1;
     string name = 2;
     bytes executable = 3;
     string executeCommand = 4;

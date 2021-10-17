@@ -1,12 +1,14 @@
 package main
 
 import (
-	"fmt"
+	"context"
+	"io"
 	"log"
-	"net/rpc"
 	"strconv"
 	"strings"
+	"time"
 
+	pb "github.com/rmgen/rae/rpc/proto"
 	"google.golang.org/grpc"
 )
 
@@ -14,37 +16,67 @@ func runClient(host *string, port *int, path *string) {
 	// client, err := rpc.DialHTTP("tcp", *host+":"+strconv.Itoa(*port))
 	conn, err := grpc.Dial(*host+":"+strconv.Itoa(*port), grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
-		log.Fatal("dialing:", err)
+		log.Fatal("dialing error: ", err)
 	}
 
-	// path := "/home/redview/go/src/github.com/rmgen/distributed_computation/data/distribute.exec"
+	defer conn.Close()
+	client := pb.NewStreamServiceClient(conn)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+	defer cancel()
 
 	programPath := strings.Split(*path, "/")
 
 	program := Program{
 		Name:           programPath[len(programPath)-1],
 		Executable:     readFile(path),
-		ExecuteCommand: "",
+		ExecuteCommand: "./",
 		Data:           "",
 		Path:           *path,
 		Argv:           nil,
 	}
 
-	reply := make(chan string)
-	doneChan := make(chan *rpc.Call, 10)
+	stream, err := client.StartApplication(ctx, &pb.Request{
+		Name:           program.Name,
+		Executable:     program.Executable,
+		ExecuteCommand: program.ExecuteCommand,
+		Data:           program.Data,
+		Path:           program.Path,
+		Argv:           program.Argv,
+		Envv:           program.Envv,
+	})
 
-	execCall := client.Go("Program.Execute", program, &reply, doneChan)
-
-	if execCall.Error != nil {
-		log.Fatal("RPC error: ", execCall.Error)
+	if err != nil {
+		log.Fatal("gRPC error: ", err)
 	}
 
-	data, done := <-doneChan
-	if done {
-		fmt.Println("Execution done ...")
-		fmt.Println(<-(*data.Reply.(*chan string)))
-	} else {
-		fmt.Println("No value was read from channel")
+	for {
+		response, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatal("stream error , ", err)
+		}
+
+		log.Println(response.GetResult())
 	}
+
+	// reply := make(chan string)
+	// doneChan := make(chan *rpc.Call, 10)
+
+	// execCall := client.Go("Program.Execute", program, &reply, doneChan)
+
+	// if execCall.Error != nil {
+	// 	log.Fatal("RPC error: ", execCall.Error)
+	// }
+
+	// data, done := <-doneChan
+	// if done {
+	// 	fmt.Println("Execution done ...")
+	// 	fmt.Println(<-(*data.Reply.(*chan string)))
+	// } else {
+	// 	fmt.Println("No value was read from channel")
+	// }
 
 }
