@@ -19,6 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type StreamServiceClient interface {
 	StartApplication(ctx context.Context, in *Request, opts ...grpc.CallOption) (StreamService_StartApplicationClient, error)
+	StreamInput(ctx context.Context, opts ...grpc.CallOption) (StreamService_StreamInputClient, error)
 }
 
 type streamServiceClient struct {
@@ -61,11 +62,43 @@ func (x *streamServiceStartApplicationClient) Recv() (*Response, error) {
 	return m, nil
 }
 
+func (c *streamServiceClient) StreamInput(ctx context.Context, opts ...grpc.CallOption) (StreamService_StreamInputClient, error) {
+	stream, err := c.cc.NewStream(ctx, &StreamService_ServiceDesc.Streams[1], "/protobuf.StreamService/StreamInput", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &streamServiceStreamInputClient{stream}
+	return x, nil
+}
+
+type StreamService_StreamInputClient interface {
+	Send(*Input) error
+	Recv() (*Response, error)
+	grpc.ClientStream
+}
+
+type streamServiceStreamInputClient struct {
+	grpc.ClientStream
+}
+
+func (x *streamServiceStreamInputClient) Send(m *Input) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *streamServiceStreamInputClient) Recv() (*Response, error) {
+	m := new(Response)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // StreamServiceServer is the server API for StreamService service.
 // All implementations must embed UnimplementedStreamServiceServer
 // for forward compatibility
 type StreamServiceServer interface {
 	StartApplication(*Request, StreamService_StartApplicationServer) error
+	StreamInput(StreamService_StreamInputServer) error
 	mustEmbedUnimplementedStreamServiceServer()
 }
 
@@ -75,6 +108,9 @@ type UnimplementedStreamServiceServer struct {
 
 func (UnimplementedStreamServiceServer) StartApplication(*Request, StreamService_StartApplicationServer) error {
 	return status.Errorf(codes.Unimplemented, "method StartApplication not implemented")
+}
+func (UnimplementedStreamServiceServer) StreamInput(StreamService_StreamInputServer) error {
+	return status.Errorf(codes.Unimplemented, "method StreamInput not implemented")
 }
 func (UnimplementedStreamServiceServer) mustEmbedUnimplementedStreamServiceServer() {}
 
@@ -110,6 +146,32 @@ func (x *streamServiceStartApplicationServer) Send(m *Response) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _StreamService_StreamInput_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(StreamServiceServer).StreamInput(&streamServiceStreamInputServer{stream})
+}
+
+type StreamService_StreamInputServer interface {
+	Send(*Response) error
+	Recv() (*Input, error)
+	grpc.ServerStream
+}
+
+type streamServiceStreamInputServer struct {
+	grpc.ServerStream
+}
+
+func (x *streamServiceStreamInputServer) Send(m *Response) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *streamServiceStreamInputServer) Recv() (*Input, error) {
+	m := new(Input)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // StreamService_ServiceDesc is the grpc.ServiceDesc for StreamService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -122,6 +184,12 @@ var StreamService_ServiceDesc = grpc.ServiceDesc{
 			StreamName:    "StartApplication",
 			Handler:       _StreamService_StartApplication_Handler,
 			ServerStreams: true,
+		},
+		{
+			StreamName:    "StreamInput",
+			Handler:       _StreamService_StreamInput_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
 		},
 	},
 	Metadata: "rpc/proto/rae.proto",

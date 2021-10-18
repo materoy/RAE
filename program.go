@@ -30,24 +30,30 @@ type Program struct {
 
 func (p *Program) Execute(stream pb.StreamService_StartApplicationServer) error {
 
+	/* Write the program data to a new file identified by
+	* the program's name
+	* in execute read and write mode
+	 */
+	// It's probably stupid to do so since io is slow
 	writeErr := os.WriteFile(p.Name, p.Executable, 0755)
+
 	if writeErr != nil {
 		log.Fatal("Write error: ", writeErr)
 	}
 
-	/** Creates a new child process for the program execution
-	* Execution replaces current process with the system call process
-	* thus quitting current
-	* hence a fork is necessary !
-	 */
-	// id, _, _ := syscall.Syscall(syscall.SYS_FORK, 0, 0, 0)
-
-	// if id == 0 {
 	fmt.Println("Executing program ...")
-	// r, w := io.Pipe()
 	// Calls execve to execute program with given params
 
-	cmd := exec.Command("./" + p.Name)
+	cmd := exec.Command(p.ExecuteCommand + p.Name)
+	/* Catch all the stdout since current assumption
+	* is that all program will output through stdout
+	 */
+
+	/* Future development will allow for
+	* interfacing different program output channels
+	* for multimedia including and especially graphics for X11, Direct12 and Metal
+	* I dont know what I'm talking about I should probably shut up
+	 */
 	stdout, err := cmd.StdoutPipe()
 
 	if err != nil {
@@ -83,15 +89,15 @@ func (p *Program) Execute(stream pb.StreamService_StartApplicationServer) error 
 	}()
 
 	go func() {
-		/// Assigned whitespace for entry to loop
-		var output string = " "
+		for {
+			line, _, eof := buf.ReadLine()
 
-		// Exists whenever there is no output from the stdout
-		// We'll probably need another exit criteria
-		for output != "" {
-			line, _, _ := buf.ReadLine()
-			output = string(line)
-			fmt.Println(output)
+			if eof != nil {
+				break
+			}
+			output := string(line)
+			log.Println(output)
+
 			stream.Send(&pb.Response{Result: output})
 		}
 	}()
@@ -108,9 +114,4 @@ func (p *Program) Execute(stream pb.StreamService_StartApplicationServer) error 
 
 	defer os.Remove(p.Name)
 	return nil
-	// } else {
-	// 	// Any computation for the parent process should be handled here
-	// 	return nil
-	// }
-
 }

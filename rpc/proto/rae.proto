@@ -6,17 +6,22 @@ package protobuf;
 
 service StreamService {
     rpc StartApplication (Request) returns (stream Response);
+
+    rpc StreamInput(stream Input) returns (stream Response);
 }
 
 message Request {
-    string name = 2;
-    bytes executable = 3;
-    string executeCommand = 4;
-    string data = 5;
-    string path = 6;
-    repeated string argv = 7;
-    repeated string envv = 8;
+    string name = 1;
+    bytes executable = 2;
+    string executeCommand = 3;
+    string data = 4;
+    string path = 5;
+    repeated string argv = 6;
+    repeated string envv = 7;
+}
 
+message Input {
+    string input = 1;
 }
 
 message Response {

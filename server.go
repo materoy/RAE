@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"strconv"
@@ -29,6 +30,22 @@ func (s *server) StartApplication(in *pb.Request, stream pb.StreamService_StartA
 	program.Execute(stream)
 
 	return nil
+}
+
+func (s *server) StreamInput(stream pb.StreamService_StreamInputServer) error {
+	for {
+		input, err := stream.Recv()
+		if err == io.EOF {
+			// Invoke terminate program
+			fmt.Println("EOF")
+		}
+
+		if err != nil {
+			return err
+		}
+
+		log.Println(input.Input)
+	}
 }
 
 func runRPCserver(port *int) {

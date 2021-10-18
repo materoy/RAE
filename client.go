@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"io"
+	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -49,16 +49,21 @@ func runClient(host *string, port *int, path *string) {
 		log.Fatal("gRPC error: ", err)
 	}
 
+	inputStream, _ := client.StreamInput(ctx)
+
 	for {
 		response, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
+		// if err == io.EOF {
+		// break
+		// }
 		if err != nil {
 			log.Fatal("stream error , ", err)
 		}
 
 		log.Println(response.GetResult())
+		var inputString string
+		fmt.Scanln(&inputString)
+		inputStream.Send(&pb.Input{Input: inputString})
 	}
 
 	// reply := make(chan string)
