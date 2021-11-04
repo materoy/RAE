@@ -93,6 +93,7 @@ func (p *Program) Execute(stream pb.StreamService_StartApplicationServer) error 
 			line, _, eof := buf.ReadLine()
 
 			if eof != nil {
+				fmt.Println(eof)
 				break
 			}
 			output := string(line)

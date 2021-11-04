@@ -1,12 +1,25 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 func main() {
 	fmt.Println("Hello and welcome to scanline game")
 	for {
+		// buf := bufio.NewReader(os.Stdin)
+		fmt.Println("> ")
+
+		// line, err := buf.ReadBytes('\n')
+		// if err != nil {
+		// 	fmt.Println(err)
+		// } else {
+		// 	fmt.Println(string(line))
+		// }
 		var input string
-		fmt.Scanln(&input)
-		fmt.Println("Your input ", input)
+		fmt.Scan(&input)
+
+		fmt.Fprint(os.Stdout, input)
 	}
 }
