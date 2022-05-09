@@ -1,3 +1,8 @@
+use std::process::Command;
+
 fn main() {
-    println!("Hello, world!");
+    let mut command = Command::new("lasfjl");
+
+    command.status().expect("Failed to execute command");
+
 }
