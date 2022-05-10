@@ -66,7 +66,26 @@ async fn client(server_addr: &str) {
             eprintln!("failed to write to socket; err = {:?}", e);
         }
 
-        loop {}
+        let mut buf = [0; 1024];
+        loop {
+            let n = match socket.read(&mut buf).await {
+                Ok(n) if n == 0 => return,
+                Ok(n) => n,
+                Err(e) => {
+                    eprintln!("failed to read from socket; err = {:?}", e);
+                    return;
+                }
+            };
+            println!("Read {} bytes from client", n);
+            if n > 0 {
+                println!("{}", String::from_utf8_lossy(&buf))
+            }
+
+            // Write all data back to the socket
+            if let Err(e) = socket.write_all(&buf[0..n]).await {
+                eprintln!("failed to write to socket; err = {:?}", e);
+            }
+        }
     } else {
         println!("Couldn't connect to server");
     }
