@@ -12,8 +12,8 @@ we'll have to wait for that.
 
 To get Started 
 
-1. Install Go
+1. Install rust 
 2. Clone the repo `git clone https://github.com/rmgen/RAE.git`
 3. `cd RAE`
-4. Run server `go run . --server true` - can be run locally or on a remote machine. I have provisioned for both cases
-5. Run program remotely `go run . --program [PATH_TO_PROGRAM_EXECUTABLE] --host [REMOTE_HOST_ADDRESS]`
+4. Run server `cargo run . --server true` - can be run locally or on a remote machine. I have provisioned for both cases
+5. Run program remotely `cargo run . --program [PATH_TO_PROGRAM_EXECUTABLE] --host [REMOTE_HOST_ADDRESS]`
