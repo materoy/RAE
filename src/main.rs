@@ -1,4 +1,9 @@
-use std::{env, io::{Write, Read}, net::{TcpListener, TcpStream}, process::Command};
+use std::{env, process::Command};
+
+use tokio::{
+    io::{AsyncReadExt, AsyncWriteExt},
+    net::{TcpListener, TcpStream},
+};
 
 #[allow(dead_code)]
 
@@ -21,7 +26,46 @@ fn execute_bin(path: &str) -> String {
     output
 }
 
-fn main() {
+async fn server(addr: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let listener = TcpListener::bind(addr).await?;
+
+    loop {
+        let (mut socket, _) = listener.accept().await?;
+        tokio::spawn(async move {
+            let mut buf = [0; 1024];
+
+            loop {
+                let n = match socket.read(&mut buf).await {
+                    Ok(n) if n == 0 => return,  
+                    Ok(n) => n,
+                    Err(e) => {
+                    eprintln!("failed to read from socket; err = {:?}", e);
+                        return 
+                    },
+                };
+
+                // Write all data back to the socket
+                if let Err(e) = socket.write_all(&buf[0..n]).await {
+                    eprintln!("failed to write to socket; err = {:?}", e);
+                }
+            }
+        });
+    }
+}
+
+async fn client(server_addr: &str) {
+    if let Ok(_) = TcpStream::connect(server_addr).await {
+        println!("Connected to server");
+        loop {
+            
+        }
+    } else {
+        println!("Couldn't connect to server");
+    }
+}
+
+#[tokio::main]
+async fn main() {
     // let exec_dir = "./exec/target/release/exec";
     // execute_bin(exec_dir);
 
@@ -33,26 +77,9 @@ fn main() {
     };
 
     let addr = "127.0.0.1:5050";
-
     if run_as_server {
-        let listener = TcpListener::bind(addr).unwrap();
-        print!(
-            "Listeneing started on address: {} \n",
-            listener.local_addr().unwrap()
-        );
-        for stream in listener.incoming() {
-            let mut stream = stream.unwrap();
-            stream.write(b"Hello world\r\n").unwrap();
-        }
+        server(addr).await.unwrap();
     } else {
-        if let Ok(mut stream) = TcpStream::connect(addr) {
-           println!("Connected to server"); 
-           let mut buf:  Vec<u8> = Vec::new(); 
-           stream.read(&mut buf).map(|result| {
-               println!("Read {} bytes from server", result);
-           }).unwrap();
-        } else {
-            println!("Couldn't connect to server");
-        }
+        client(addr).await;
     }
 }
