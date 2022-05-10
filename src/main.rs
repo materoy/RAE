@@ -31,18 +31,23 @@ async fn server(addr: &str) -> Result<(), Box<dyn std::error::Error>> {
 
     loop {
         let (mut socket, _) = listener.accept().await?;
+        println!("Connected to client: {}", socket.peer_addr().unwrap());
         tokio::spawn(async move {
             let mut buf = [0; 1024];
 
             loop {
                 let n = match socket.read(&mut buf).await {
-                    Ok(n) if n == 0 => return,  
+                    Ok(n) if n == 0 => return,
                     Ok(n) => n,
                     Err(e) => {
-                    eprintln!("failed to read from socket; err = {:?}", e);
-                        return 
-                    },
+                        eprintln!("failed to read from socket; err = {:?}", e);
+                        return;
+                    }
                 };
+                println!("Read {} bytes from client", n);
+                if n > 0 {
+                    println!("{}", String::from_utf8_lossy(&buf))
+                }
 
                 // Write all data back to the socket
                 if let Err(e) = socket.write_all(&buf[0..n]).await {
@@ -54,11 +59,14 @@ async fn server(addr: &str) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn client(server_addr: &str) {
-    if let Ok(_) = TcpStream::connect(server_addr).await {
+    if let Ok(mut socket) = TcpStream::connect(server_addr).await {
         println!("Connected to server");
-        loop {
-            
+
+        if let Err(e) = socket.write(b"Hello world").await {
+            eprintln!("failed to write to socket; err = {:?}", e);
         }
+
+        loop {}
     } else {
         println!("Couldn't connect to server");
     }
