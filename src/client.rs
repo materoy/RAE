@@ -17,7 +17,7 @@ pub async fn client(server_addr: &str) {
 
         // Send binary file to server
         let path = "./exec/target/release/exec";
-        if let Err(e) = socket.write(&file_io::read_bin_file(path)).await {
+        if let Err(e) = socket.write_all(&file_io::read_bin_file(path)).await {
             eprintln!("failed to write to socket; err = {:?}", e);
         }
 

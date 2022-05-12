@@ -15,27 +15,30 @@ pub async fn server(addr: &str) -> Result<(), Box<dyn std::error::Error>> {
         println!("Connected to client: {}", socket.peer_addr().unwrap());
         tokio::spawn(async move {
             let mut file = file_io::create_bin_file("test_executable");
-            let mut buf = [0; 1024];
+            let mut buf = [0;1024];
 
             loop {
                 let n = match socket.read(&mut buf).await {
-                    Ok(n) if n == 0 => return,
+                    Ok(n) if n == 0 => break,
                     Ok(n) => n,
                     Err(e) => {
                         eprintln!("failed to read from socket; err = {:?}", e);
-                        return;
+                        break;
                     }
                 };
-                println!("Read {} bytes from client", n);
-                if n > 0 {
-                    file.write_all(&buf).expect("Unable to write to file");
-                    let output = executor::execute_bin("test_executable");
 
-                    // Write IO output back to the socket
-                    if let Err(e) = socket.write_all(output.as_bytes()).await {
-                        eprintln!("failed to write to socket; err = {:?}", e);
-                    }
-                }
+                println!("Read {} bytes from client", n);
+                match file.write_all(&buf) {
+                    Ok(_) => println!("File written"),
+                    Err(e) => eprintln!("Problem writing to file: {}", e),
+                };
+            }
+
+            let output = executor::execute_bin("test_executable");
+
+            // Write IO output back to the socket
+            if let Err(e) = socket.write_all(output.as_bytes()).await {
+                eprintln!("failed to write to socket; err = {:?}", e);
             }
         });
     }

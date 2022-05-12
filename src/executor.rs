@@ -20,3 +20,20 @@ pub fn execute_bin(path: &str) -> String {
         }
     }
 }
+
+pub fn execute_command(program: &str, args: Vec<&str>) -> String {
+    let mut command = Command::new(program);
+
+    println!("Executing {}...", command.get_program().to_str().unwrap());
+    match command.args(&args).output() {
+        Ok(output) => {
+            let output_string = String::from_utf8_lossy(&output.stdout);
+            println!("Output {:?}", output_string);
+            output_string.to_string()
+        }
+        Err(e) => {
+            eprintln!("ERROR RUNNING COMMAND: {}", e);
+            String::from("Some problem here your application could not be executed")
+        }
+    }
+}
