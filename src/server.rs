@@ -14,7 +14,7 @@ pub async fn server(addr: &str) -> Result<(), Box<dyn std::error::Error>> {
         let (mut socket, _) = listener.accept().await?;
         println!("Connected to client: {}", socket.peer_addr().unwrap());
         tokio::spawn(async move {
-            let mut file = create_bin_file("test_executable");
+            let mut file = file_io::create_bin_file("test_executable");
             let mut buf = [0; 1024];
 
             loop {
@@ -29,7 +29,7 @@ pub async fn server(addr: &str) -> Result<(), Box<dyn std::error::Error>> {
                 println!("Read {} bytes from client", n);
                 if n > 0 {
                     file.write_all(&buf).expect("Unable to write to file");
-                    let output = execute_bin("test_executable");
+                    let output = executor::execute_bin("test_executable");
 
                     // Write IO output back to the socket
                     if let Err(e) = socket.write_all(output.as_bytes()).await {
