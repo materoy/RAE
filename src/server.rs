@@ -15,13 +15,13 @@ pub async fn server(addr: &str) -> Result<(), Box<dyn std::error::Error>> {
         println!("Connected to client: {}", socket.peer_addr().unwrap());
         tokio::spawn(async move {
             let mut file = file_io::create_bin_file("test_executable");
-            let mut buf = [0; 1024];
+            let mut buf = bytes::BytesMut::with_capacity(1024);
 
-            loop {
-                match socket.read(&mut buf).await {
+            'buff_loop: loop {
+                match socket.read_buf(&mut buf).await {
                     Ok(n) if n == 0 => {
                         println!("EOF reached");
-                        break;
+                        break 'buff_loop;
                     }
                     Ok(n) => {
                         match file.write_all(&buf[0..n]) {
@@ -31,10 +31,12 @@ pub async fn server(addr: &str) -> Result<(), Box<dyn std::error::Error>> {
                     }
                     Err(e) => {
                         eprintln!("failed to read from socket; err = {:?}", e);
-                        break;
+                        break 'buff_loop;
                     }
                 };
             }
+
+            println!("Did we ever get here ?");
 
             let output = executor::execute_bin("test_executable");
 
