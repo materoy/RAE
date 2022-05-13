@@ -1,9 +1,12 @@
-use std::fs::{self, File};
+use std::{fs::{self, File}, io::Read};
 
 use crate::executor::execute_command;
 
 pub fn read_bin_file(path: &str) -> Vec<u8> {
-    fs::read(path).expect("Failed to read binary file")
+    let mut file = fs::File::open(path).expect("Failed to open binary file");
+    let mut buf = Vec::new();
+    file.read_to_end(&mut buf).expect("Failed to read binary file");
+    buf
 }
 
 pub fn create_bin_file(file_name: &str) -> File {

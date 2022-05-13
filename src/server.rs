@@ -16,15 +16,15 @@ pub async fn server(addr: &str) -> Result<(), Box<dyn std::error::Error>> {
         tokio::spawn(async move {
             let mut file = file_io::create_bin_file("test_executable");
             let mut buf = bytes::BytesMut::with_capacity(1024);
-
+            
             'buff_loop: loop {
                 match socket.read_buf(&mut buf).await {
                     Ok(n) if n == 0 => {
                         println!("EOF reached");
                         break 'buff_loop;
                     }
-                    Ok(n) => {
-                        match file.write_all(&buf[0..n]) {
+                    Ok(_) => {
+                        match file.write_all(&buf) {
                             Ok(_) => {}
                             Err(e) => eprintln!("Problem writing to file: {}", e),
                         };
