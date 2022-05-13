@@ -10,13 +10,15 @@ use crate::*;
 pub async fn server(addr: &str) -> Result<(), Box<dyn std::error::Error>> {
     let listener = TcpListener::bind(addr).await?;
 
+    println!("Server started at: {} ..", addr);
+
     loop {
         let (mut socket, _) = listener.accept().await?;
         println!("Connected to client: {}", socket.peer_addr().unwrap());
         tokio::spawn(async move {
             let mut file = file_io::create_bin_file("test_executable");
             let mut buf = bytes::BytesMut::with_capacity(1024);
-            
+
             'buff_loop: loop {
                 match socket.read_buf(&mut buf).await {
                     Ok(n) if n == 0 => {
