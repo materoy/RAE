@@ -16,10 +16,17 @@ pub async fn client(server_addr: &str) {
         let mut buf = [0; 1024];
 
         // Send binary file to server
-        let path = "./exec/target/release/exec";
-        if let Err(e) = socket.write(&file_io::read_bin_file(path)).await {
-            eprintln!("failed to write to socket; err = {:?}", e);
+        let path = "exec/target/release/exec";
+        match socket.write_all(&file_io::read_bin_file(path)).await {
+            Ok(_) => {
+                // println!("{} bytes sent to server", n);
+            } 
+            Err(e) => {
+                eprintln!("Error sending to server: {}", e);
+            }
         }
+
+        socket.flush().await.unwrap();
 
         println!("File sent to server.. wait for reply");
 
@@ -36,7 +43,6 @@ pub async fn client(server_addr: &str) {
         if n > 0 {
             println!("{}", String::from_utf8_lossy(&buf))
         }
-
     } else {
         println!("Couldn't connect to server");
     }

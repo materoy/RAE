@@ -19,3 +19,5 @@
 
 /target
 /exec/target
+
+test_executable

@@ -15,7 +15,6 @@ pub fn read_bin_file(path: &str) -> Vec<u8> {
         match file.read(&mut buf) {
             Ok(n) if n == 0 => break,
             Ok(n) => {
-                println!("Read {} bytes", n);
                 file_byte.put_slice(&buf[0..n])
             }
             Err(e) => {
