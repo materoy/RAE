@@ -17,5 +17,11 @@ name = "sample-hello-world"
 path = "src/samples/hello_world.rs"
 
 [dependencies]
-tokio = { version = "1.18.2", features = ["full"] }
+tokio = { version = "1.18.2", features = ["full", "macros", "rt-multi-thread"] }
 bytes = "1.1.0"
+tonic = "0.7.2"
+prost = "0.10.3"
+
+[build-dependencies]
+tonic-build = "0.7.2"
+
