@@ -1,6 +1,7 @@
 use std::fs::File;
 
-use crate::executor;
+use super::executor;
+
 
 pub fn create_bin_file(file_name: &str) -> File {
     let file = File::create(file_name).expect("Unable to create temp file");

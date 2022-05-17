@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package application;
+
+service StreamService {
+    rpc StartApplication (ApplicationRequest) returns (stream ApplicationResponse);
+
+    rpc StreamInput(stream Input) returns (stream ApplicationResponse);
+}
+
+message ApplicationRequest {
+    string name = 1;
+    bytes executable = 2;
+    string executeCommand = 3;
+    string data = 4;
+    string path = 5;
+    repeated string argv = 6;
+    repeated string envv = 7;
+}
+
+message Input {
+    string input = 1;
+}
+
+message ApplicationResponse {
+    string result = 1;
+}

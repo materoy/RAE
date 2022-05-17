@@ -18,6 +18,5 @@
 
 
 /target
-/exec/target
+/bin
 
-test_executable

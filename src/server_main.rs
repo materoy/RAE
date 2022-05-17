@@ -6,8 +6,8 @@ use tokio::{
 };
 
 
-mod file_io;
-mod executor;
+mod server;
+mod application;
 
 #[tokio::main]
 pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -20,7 +20,7 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let (mut socket, _) = listener.accept().await?;
         println!("Connected to client: {}", socket.peer_addr().unwrap());
         tokio::spawn(async move {
-            let mut file = file_io::create_bin_file("test_executable");
+            let mut file = server::file_io::create_bin_file("test_executable");
             let mut buf = bytes::BytesMut::with_capacity(1024);
 
             'buff_loop: loop {
@@ -45,7 +45,7 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             println!("Did we ever get here ?");
 
-            let output = executor::execute_bin("test_executable");
+            let output = server::executor::execute_bin("test_executable");
 
             // Write IO output back to the socket
             if let Err(e) = socket.write_all(output.as_bytes()).await {
@@ -53,4 +53,5 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         });
     }
+
 }

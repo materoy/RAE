@@ -3,8 +3,7 @@ use tokio::{
     net::TcpStream,
 };
 
-
-mod file_io;
+mod client;
 
 #[tokio::main]
 pub async fn main() {
@@ -20,10 +19,10 @@ pub async fn main() {
 
         // Send binary file to server
         let path = "exec/target/release/exec";
-        match socket.write_all(&file_io::read_bin_file(path)).await {
+        match socket.write_all(&client::file_io::read_bin_file(path)).await {
             Ok(_) => {
                 // println!("{} bytes sent to server", n);
-            } 
+            }
             Err(e) => {
                 eprintln!("Error sending to server: {}", e);
             }
