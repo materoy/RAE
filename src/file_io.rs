@@ -5,7 +5,6 @@ use std::{
 
 use bytes::BufMut;
 
-use crate::executor::execute_command;
 
 pub fn read_bin_file(path: &str) -> Vec<u8> {
     let mut file = fs::File::open(path).expect("Failed to open binary file");
@@ -29,6 +28,6 @@ pub fn read_bin_file(path: &str) -> Vec<u8> {
 pub fn create_bin_file(file_name: &str) -> File {
     let file = File::create(file_name).expect("Unable to create temp file");
     // unix::fs::fchown(&file, Some(1000), Some(1000)).expect("Could not make file executable");
-    execute_command("chmod", vec!["+x", file_name]);
+    crate::executor::execute_command("chmod", vec!["+x", file_name]);
     file
 }

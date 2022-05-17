@@ -5,9 +5,14 @@ use tokio::{
     net::TcpListener,
 };
 
-use crate::*;
 
-pub async fn server(addr: &str) -> Result<(), Box<dyn std::error::Error>> {
+mod file_io;
+mod executor;
+
+
+#[tokio::main]
+pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let addr = "127.0.0.1:5050";
     let listener = TcpListener::bind(addr).await?;
 
     println!("Server started at: {} ..", addr);

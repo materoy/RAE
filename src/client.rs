@@ -3,9 +3,12 @@ use tokio::{
     net::TcpStream,
 };
 
-use crate::*;
 
-pub async fn client(server_addr: &str) {
+mod file_io;
+
+#[tokio::main]
+pub async fn main() {
+    let server_addr = "127.0.0.1:5050";
     if let Ok(mut socket) = TcpStream::connect(server_addr).await {
         println!("Connected to server");
 
