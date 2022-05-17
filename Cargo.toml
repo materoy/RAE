@@ -6,11 +6,15 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [[bin]]
 name = "server"
-path = "src/server.rs"
+path = "src/server/server.rs"
 
 [[bin]]
 name = "client"
-path = "src/client.rs"
+path = "src/client/client.rs"
+
+[[bin]]
+name = "sample-hello-world"
+path = "src/samples/hello_world.rs"
 
 [dependencies]
 tokio = { version = "1.18.2", features = ["full"] }
