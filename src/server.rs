@@ -37,6 +37,7 @@ pub async fn server(addr: &str) -> Result<(), Box<dyn std::error::Error>> {
                     }
                 };
             }
+            file.flush().unwrap();
 
             println!("Did we ever get here ?");
 
