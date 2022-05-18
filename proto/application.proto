@@ -3,9 +3,9 @@ syntax = "proto3";
 package application;
 
 service StreamService {
-    rpc StartApplication (ApplicationRequest) returns (stream ApplicationResponse);
+    rpc StartApplication (ApplicationRequest) returns (ApplicationResponse);
 
-    rpc StreamInput(stream Input) returns (stream ApplicationResponse);
+    rpc StreamInput(Input) returns (ApplicationResponse);
 }
 
 message ApplicationRequest {

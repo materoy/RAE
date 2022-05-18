@@ -1,15 +1,6 @@
-use std::io::Write;
-
-use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt},
-    net::TcpListener,
-};
-
 use application_proto::stream_service_server::{StreamService, StreamServiceServer};
 use application_proto::{ApplicationRequest, ApplicationResponse, Input};
-use tonic::{
-    codegen::futures_core::Stream, transport::Server, Request, Response, Status, Streaming,
-};
+use tonic::{transport::Server, Request, Response, Status};
 
 mod application;
 mod server;
@@ -23,20 +14,28 @@ pub struct ApplicationService {}
 
 #[tonic::async_trait]
 impl StreamService for ApplicationService {
-    type StreamInputStream = dyn futures_core::Stream<Item = Input>;
-
     async fn start_application(
         &self,
         reqest: Request<ApplicationRequest>,
     ) -> Result<Response<ApplicationResponse>, Status> {
-        unimplemented!()
+        let req = reqest.into_inner();
+        println!("{}", req.name);
+
+        Ok(Response::new(ApplicationResponse {
+            result: String::from("Hi there, you happly?"),
+        }))
     }
 
     async fn stream_input(
         &self,
-        reqest: tonic::Request<Streaming<Input>>,
+        reqest: Request<Input>,
     ) -> Result<Response<ApplicationResponse>, Status> {
-        unimplemented!()
+        let req = reqest.into_inner();
+        println!("{}", req.input);
+
+        Ok(Response::new(ApplicationResponse {
+            result: String::from("Hi there, you happly?"),
+        }))
     }
 }
 
