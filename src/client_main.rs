@@ -5,6 +5,10 @@ use tokio::{
 
 mod client;
 
+pub mod application_proto {
+    tonic::include_proto!("application");
+}
+
 #[tokio::main]
 pub async fn main() {
     let server_addr = "127.0.0.1:5050";
