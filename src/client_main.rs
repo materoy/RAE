@@ -12,14 +12,18 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let server_addr = "http://127.0.0.1:5050";
     let mut application_client = StreamServiceClient::connect(server_addr).await?;
 
+    // Send binary file to server
+    let path = "target/debug/sample-hello-world";
+    let bin = &client::file_io::read_bin_file(path);
+
     let request = tonic::Request::new(ApplicationRequest {
-        name: String::from("What a name"),
-        executable: vec![],
-        execute_command: String::from(""), 
+        name: String::from(path.split('/').last().unwrap()),
+        executable: bin.to_vec(),
+        execute_command: String::from("./"),
         data: String::from(""),
         path: String::from(""),
         argv: Vec::new(),
-        envv: Vec::new(), 
+        envv: Vec::new(),
     });
 
     let response = application_client.start_application(request).await?;

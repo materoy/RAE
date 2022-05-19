@@ -1,3 +1,6 @@
+use std::io::{IoSlice, Write};
+use std::vec;
+
 use application_proto::stream_service_server::{StreamService, StreamServiceServer};
 use application_proto::{ApplicationRequest, ApplicationResponse, Input};
 use tonic::{transport::Server, Request, Response, Status};
@@ -21,8 +24,17 @@ impl StreamService for ApplicationService {
         let req = reqest.into_inner();
         println!("{}", req.name);
 
+        let file_path = format!("bin/{}", req.name);
+        let mut file = server::file_io::create_bin_file(&file_path);
+
+        file.write_vectored(&vec![IoSlice::new(req.executable.as_slice())]).expect("Failed to write to file");
+
+        let output = server::executor::execute_bin(&file_path);
+
+        println!("Output: {}", output);
+
         Ok(Response::new(ApplicationResponse {
-            result: String::from("Hi there, you happly?"),
+            result: output 
         }))
     }
 
