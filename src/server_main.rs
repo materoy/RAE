@@ -1,8 +1,9 @@
-use std::io::{IoSlice, Write};
-use std::vec;
+use std::os::unix::prelude::AsRawFd;
 
 use application_proto::stream_service_server::{StreamService, StreamServiceServer};
 use application_proto::{ApplicationRequest, ApplicationResponse, Input};
+use nix::libc::close;
+use tokio::io::AsyncWriteExt;
 use tonic::{transport::Server, Request, Response, Status};
 
 mod application;
@@ -25,17 +26,37 @@ impl StreamService for ApplicationService {
         println!("{}", req.name);
 
         let file_path = format!("bin/{}", req.name);
-        let mut file = server::file_io::create_bin_file(&file_path);
+        let mut file = server::file_io::create_bin_file(&file_path).await;
 
-        file.write_vectored(&vec![IoSlice::new(req.executable.as_slice())]).expect("Failed to write to file");
+        file.write(&req.executable)
+            .await
+            .expect("Failed to write to file");
 
-        let output = server::executor::execute_bin(&file_path);
+        unsafe {
+            let exit_status = close(file.as_raw_fd());
+            println!("Close exit Status: {}", exit_status);
+        }
+        // executor::execute_command("chmod", vec!["+x", &file_path]);
 
-        println!("Output: {}", output);
+        drop(file);
 
-        Ok(Response::new(ApplicationResponse {
-            result: output 
-        }))
+        let message = match server::executor::execute_bin(
+            &file_path,
+            req.argv.iter().map(|s| &**s).collect(),
+        ) {
+            Some(output) => {
+                println!("Output: {}", output.status);
+                output.status.to_string()
+            }
+            None => {
+                eprintln!("No output");
+                String::from("No output")
+            }
+        };
+
+        server::file_io::delete_file(&file_path).await;
+
+        Ok(Response::new(ApplicationResponse { result: message }))
     }
 
     async fn stream_input(
@@ -61,48 +82,6 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_service(StreamServiceServer::new(application_service))
         .serve(addr)
         .await?;
-
-    // let listener = TcpListener::bind(addr).await?;
-
-    // println!("Server started at: {} ..", addr);
-
-    // loop {
-    //     let (mut socket, _) = listener.accept().await?;
-    //     println!("Connected to client: {}", socket.peer_addr().unwrap());
-    //     tokio::spawn(async move {
-    //         let mut file = server::file_io::create_bin_file("test_executable");
-    //         let mut buf = bytes::BytesMut::with_capacity(1024);
-
-    //         'buff_loop: loop {
-    //             match socket.read_buf(&mut buf).await {
-    //                 Ok(n) if n == 0 => {
-    //                     println!("EOF reached");
-    //                     break 'buff_loop;
-    //                 }
-    //                 Ok(_) => {
-    //                     match file.write_all(&buf) {
-    //                         Ok(_) => {}
-    //                         Err(e) => eprintln!("Problem writing to file: {}", e),
-    //                     };
-    //                 }
-    //                 Err(e) => {
-    //                     eprintln!("failed to read from socket; err = {:?}", e);
-    //                     break 'buff_loop;
-    //                 }
-    //             };
-    //         }
-    //         file.flush().unwrap();
-
-    //         println!("Did we ever get here ?");
-
-    //         let output = server::executor::execute_bin("test_executable");
-
-    //         // Write IO output back to the socket
-    //         if let Err(e) = socket.write_all(output.as_bytes()).await {
-    //             eprintln!("failed to write to socket; err = {:?}", e);
-    //         }
-    //     });
-    // }
 
     Ok(())
 }

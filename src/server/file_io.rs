@@ -1,11 +1,26 @@
-use std::fs::File;
+use tokio::fs::File;
 
-use super::executor;
+use tokio::fs::OpenOptions;
 
 
-pub fn create_bin_file(file_name: &str) -> File {
-    let file = File::create(file_name).expect("Unable to create temp file");
-    // unix::fs::fchown(&file, Some(1000), Some(1000)).expect("Could not make file executable");
-    executor::execute_command("chmod", vec!["+x", file_name]);
+pub async fn create_bin_file(file_name: &str) -> File {
+    
+    let file = OpenOptions::new()
+        .write(true)
+        .read(true)
+        .create(true)
+        .mode(0o111)
+        .open(file_name)
+        .await.expect("Cannot create file");
+
     file
+}
+
+pub async fn delete_file(file_name: &str) {
+    match tokio::fs::remove_file(file_name).await {
+        Ok(_) => { println!("File deleted successfully")},
+        Err(e) => {
+            eprintln!("Error deleting file: {}", e);
+        }
+    }
 }
