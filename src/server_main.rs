@@ -28,7 +28,7 @@ impl StreamService for ApplicationService {
         let file_path = format!("bin/{}", req.name);
         let mut file = server::file_io::create_bin_file(&file_path).await;
 
-        file.write(&req.executable)
+        file.write_all(&req.executable)
             .await
             .expect("Failed to write to file");
 
@@ -36,8 +36,6 @@ impl StreamService for ApplicationService {
             let exit_status = close(file.as_raw_fd());
             println!("Close exit Status: {}", exit_status);
         }
-        // executor::execute_command("chmod", vec!["+x", &file_path]);
-
         drop(file);
 
         let message = match server::executor::execute_bin(
@@ -45,8 +43,9 @@ impl StreamService for ApplicationService {
             req.argv.iter().map(|s| &**s).collect(),
         ) {
             Some(output) => {
-                println!("Output: {}", output.status);
-                output.status.to_string()
+                let output = String::from_utf8(output.stdout).unwrap();
+                println!("Output: {}", output);
+                output
             }
             None => {
                 eprintln!("No output");
@@ -54,6 +53,7 @@ impl StreamService for ApplicationService {
             }
         };
 
+        // Deletes the generated bin file
         server::file_io::delete_file(&file_path).await;
 
         Ok(Response::new(ApplicationResponse { result: message }))
