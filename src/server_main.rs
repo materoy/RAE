@@ -1,9 +1,10 @@
+use std::fmt::Debug;
 use std::os::unix::prelude::AsRawFd;
 
 use application_proto::stream_service_server::{StreamService, StreamServiceServer};
 use application_proto::{ApplicationRequest, ApplicationResponse, Input};
 use nix::libc::close;
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncWriteExt, AsyncReadExt};
 use tonic::{transport::Server, Request, Response, Status};
 
 mod application;
@@ -42,8 +43,10 @@ impl StreamService for ApplicationService {
             &file_path,
             req.argv.iter().map(|s| &**s).collect(),
         ) {
-            Some(output) => {
-                let output = String::from_utf8(output.stdout).unwrap();
+            Some(mut child) => {
+                let mut stdout = child.stdout.take().expect("no stdout");
+                let mut output = String::new();
+                stdout.read_to_string(&mut output).await.unwrap();
                 println!("Output: {}", output);
                 output
             }
