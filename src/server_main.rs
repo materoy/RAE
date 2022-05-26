@@ -1,9 +1,8 @@
 use std::fmt::Debug;
-use std::os::unix::prelude::AsRawFd;
+use std::io::{ Write};
 
 use application_proto::stream_service_server::{StreamService, StreamServiceServer};
 use application_proto::{ApplicationRequest, ApplicationResponse, Input};
-use nix::libc::close;
 use tokio::io::{AsyncWriteExt, AsyncReadExt};
 use tonic::{transport::Server, Request, Response, Status};
 
@@ -30,36 +29,51 @@ impl StreamService for ApplicationService {
         let mut file = server::file_io::create_bin_file(&file_path).await;
 
         file.write_all(&req.executable)
-            .await
             .expect("Failed to write to file");
-
-        unsafe {
-            let exit_status = close(file.as_raw_fd());
-            println!("Close exit Status: {}", exit_status);
-        }
         drop(file);
 
-        let message = match server::executor::execute_bin(
-            &file_path,
-            req.argv.iter().map(|s| &**s).collect(),
-        ) {
-            Some(mut child) => {
-                let mut stdout = child.stdout.take().expect("no stdout");
+        // unsafe {
+        //     let exit_status = close(file.as_raw_fd());
+        //     println!("Close exit Status: {}", exit_status);
+        // }
+
+        let mut child =
+            server::executor::execute_bin(&file_path, req.argv.iter().map(|s| &**s).collect())
+                .unwrap();
+        println!("Execution Started... {}", file_path);
+
+
+        let output = match child.stdout.take() {
+            Some(mut child_stdout) => {
                 let mut output = String::new();
-                stdout.read_to_string(&mut output).await.unwrap();
-                println!("Output: {}", output);
-                output
+                println!("OUTPUT: {:?}", child_stdout);
+                // match stdout.read_to_string(&mut output) {
+                //     Ok(_) => todo!(),
+                //     Err(_) => todo!(),
+                // }
+                // let mut buf: Vec<u8> = Vec::new();
+                
+                let lines_read = child_stdout.read_to_string(&mut output).await.unwrap();
+                println!("{}", lines_read);
+
+                // output
+                "Hello".to_string()
             }
-            None => {
-                eprintln!("No output");
-                String::from("No output")
-            }
+            None => String::from("NO OUTPUT"),
         };
+
+        /* Just if the data is not empty push it to stdin */
+        if req.data != String::from("") {
+            let stdin = child.stdin.as_mut().unwrap();
+            stdin.write_all(req.data.as_bytes()).await.unwrap();
+        }
+
+        println!("Reached here");
 
         // Deletes the generated bin file
         server::file_io::delete_file(&file_path).await;
 
-        Ok(Response::new(ApplicationResponse { result: message }))
+        Ok(Response::new(ApplicationResponse { result: output }))
     }
 
     async fn stream_input(

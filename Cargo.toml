@@ -12,9 +12,15 @@ path = "src/server_main.rs"
 name = "client"
 path = "src/client_main.rs"
 
+# Example binaries
 [[bin]]
 name = "sample-hello-world"
 path = "src/samples/hello_world.rs"
+
+[[bin]]
+name = "sample-input-echo"
+path = "src/samples/input_echo.rs"
+
 
 [dependencies]
 tokio = { version = "1.18.2", features = ["full", "macros", "rt-multi-thread"] }

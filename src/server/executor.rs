@@ -1,13 +1,19 @@
 use std::process::Stdio;
 
-use tokio::process::{Child, Command};
+use tokio::process::{Command, Child};
+
 
 /*
     This command executes a binary given its path
     then returns and prints out its's output
 */
 pub fn execute_bin(path: &str, args: Vec<&str>) -> Option<Child> {
-    match Command::new(path).args(args).stdout(Stdio::piped()).spawn() {
+    match Command::new(path)
+        .args(args)
+        .stdout(Stdio::piped())
+        .stdin(Stdio::piped())
+        .spawn()
+    {
         Ok(child) => Some(child),
         Err(err) => {
             eprintln!("ERROR RUNNING BINRARY: {}", err);

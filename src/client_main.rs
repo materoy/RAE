@@ -1,3 +1,5 @@
+use std::env;
+
 use application_proto::stream_service_client::StreamServiceClient;
 use application_proto::ApplicationRequest;
 
@@ -9,18 +11,31 @@ pub mod application_proto {
 
 #[tokio::main]
 pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let args = env::args().skip(1).collect::<Vec<String>>();
+    // let default_program_path = "target/debug/sample-hello-world";
+    let default_program_path = "target/debug/sample-input-echo";
+    let program_path = match args.first() {
+        Some(title) => match title.as_str() {
+            "input-echo" => "target/debug/sample-input-echo",
+            _ => default_program_path
+        },
+        None => default_program_path,
+    };
+
     let server_addr = "http://127.0.0.1:5050";
     let mut application_client = StreamServiceClient::connect(server_addr).await?;
 
     // Send binary file to server
-    let path = "target/debug/sample-hello-world";
-    let bin = &client::file_io::read_bin_file(path);
+    let bin = &client::file_io::read_bin_file(program_path);
+
+    // let mut input = String::new();
+    // stdin().read_line(&mut input).unwrap();
 
     let request = tonic::Request::new(ApplicationRequest {
-        name: String::from(path.split('/').last().unwrap()),
+        name: String::from(program_path.split('/').last().unwrap()),
         executable: bin.to_vec(),
         execute_command: String::from("./"),
-        data: String::from(""),
+        data: String::from("Just input"),
         path: String::from(""),
         argv: Vec::new(),
         envv: Vec::new(),
@@ -31,45 +46,4 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Response: {:?}", response);
 
     Ok(())
-
-    // if let Ok(mut socket) = TcpStream::connect(server_addr).await {
-    //     println!("Connected to server");
-
-    //     if let Err(e) = socket.write(b"Hello world").await {
-    //         eprintln!("failed to write to socket; err = {:?}", e);
-    //     }
-
-    //     let mut buf = [0; 1024];
-
-    //     // Send binary file to server
-    //     let path = "exec/target/release/exec";
-    //     match socket.write_all(&client::file_io::read_bin_file(path)).await {
-    //         Ok(_) => {
-    //             // println!("{} bytes sent to server", n);
-    //         }
-    //         Err(e) => {
-    //             eprintln!("Error sending to server: {}", e);
-    //         }
-    //     }
-
-    //     socket.flush().await.unwrap();
-
-    //     println!("File sent to server.. wait for reply");
-
-    //     let n = match socket.read(&mut buf).await {
-    //         Ok(n) if n == 0 => return,
-    //         Ok(n) => n,
-    //         Err(e) => {
-    //             eprintln!("failed to read from socket; err = {:?}", e);
-    //             return;
-    //         }
-    //     };
-    //     println!("Read {} bytes from server", n);
-
-    //     if n > 0 {
-    //         println!("{}", String::from_utf8_lossy(&buf))
-    //     }
-    // } else {
-    //     println!("Couldn't connect to server");
-    // }
 }
