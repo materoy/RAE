@@ -1,11 +1,13 @@
+
 use std::fmt::Debug;
-use std::io::{ Write};
+use std::io::Write;
+use std::process::exit;
 
 use application_proto::stream_service_server::{StreamService, StreamServiceServer};
 use application_proto::{ApplicationRequest, ApplicationResponse, Input};
-use tokio::io::{AsyncWriteExt, AsyncReadExt};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::task::futures;
 use tonic::{transport::Server, Request, Response, Status};
-
 mod application;
 mod server;
 
@@ -42,7 +44,6 @@ impl StreamService for ApplicationService {
                 .unwrap();
         println!("Execution Started... {}", file_path);
 
-
         let output = match child.stdout.take() {
             Some(mut child_stdout) => {
                 let mut output = String::new();
@@ -52,7 +53,7 @@ impl StreamService for ApplicationService {
                 //     Err(_) => todo!(),
                 // }
                 // let mut buf: Vec<u8> = Vec::new();
-                
+
                 let lines_read = child_stdout.read_to_string(&mut output).await.unwrap();
                 println!("{}", lines_read);
 
@@ -71,7 +72,7 @@ impl StreamService for ApplicationService {
         println!("Reached here");
 
         // Deletes the generated bin file
-        server::file_io::delete_file(&file_path).await;
+        server::file_io::delete_file_async(&file_path).await;
 
         Ok(Response::new(ApplicationResponse { result: output }))
     }
@@ -89,8 +90,17 @@ impl StreamService for ApplicationService {
     }
 }
 
+
 #[tokio::main]
 pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
+
+    ctrlc::set_handler(move || {
+        println!("SIGTERM received, cleaning up...");
+        server::file_io::delete_all_in_dir("bin");
+        println!("Clean up complete. Shutting down with exit code 1");
+        exit(1);
+    })?;
+
     let addr = "127.0.0.1:5050".parse()?;
 
     let application_service = ApplicationService::default();

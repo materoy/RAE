@@ -17,7 +17,7 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let program_path = match args.first() {
         Some(title) => match title.as_str() {
             "input-echo" => "target/debug/sample-input-echo",
-            _ => default_program_path
+            _ => default_program_path,
         },
         None => default_program_path,
     };

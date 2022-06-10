@@ -1,7 +1,6 @@
 use std::process::Stdio;
 
-use tokio::process::{Command, Child};
-
+use tokio::process::{Child, Command};
 
 /*
     This command executes a binary given its path
