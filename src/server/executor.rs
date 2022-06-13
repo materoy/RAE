@@ -11,6 +11,7 @@ pub fn execute_bin(path: &str, args: Vec<&str>) -> Option<Child> {
         .args(args)
         .stdout(Stdio::piped())
         .stdin(Stdio::piped())
+        .stderr(Stdio::piped())
         .spawn()
     {
         Ok(child) => Some(child),
