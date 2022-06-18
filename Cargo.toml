@@ -25,11 +25,12 @@ path = "src/samples/input_echo.rs"
 
 [dependencies]
 tokio = { version = "1.18.2", features = ["full", "macros", "rt-multi-thread"] }
+tokio-stream = { version = "0.1.9", features = ["net"] }
 bytes = "1.1.0"
 tonic = "0.7.2"
 prost = "0.10.3"
 async-stream = "0.3.3"
-futures-core = "0.3.21"
+futures = { version = "0.3", default-features = false, features = ["alloc"] }
 nix = "0.24.1"
 ctrlc = { version = "3.2.2", features = ["termination"]}
 

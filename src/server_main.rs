@@ -1,12 +1,14 @@
 use std::fmt::Debug;
 use std::io::Write;
+use std::pin::Pin;
 use std::process::exit;
-use std::sync::mpsc::{self, Receiver, Sender};
+use tokio::sync::mpsc;
 
 use application_proto::stream_service_server::{StreamService, StreamServiceServer};
-use application_proto::{ApplicationRequest, ApplicationResponse, Input};
-use bytes::BufMut;
+use application_proto::{ApplicationRequest, ApplicationResponse};
+use futures::Stream;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio_stream::wrappers::ReceiverStream;
 use tonic::{transport::Server, Request, Response, Status};
 mod application;
 mod server;
@@ -17,16 +19,23 @@ pub mod application_proto {
 
 pub mod consts;
 
+type ApplicationResult<T> = Result<Response<T>, Status>;
+type ResponseStream = Pin<Box<dyn Stream<Item = Result<ApplicationResponse, Status>> + Send>>;
+
 #[derive(Debug, Default)]
-pub struct ApplicationService {}
+pub struct RaeServer {}
 
 #[tonic::async_trait]
-impl StreamService for ApplicationService {
+impl StreamService for RaeServer {
+    type StartApplicationStream = ResponseStream;
+
     async fn start_application(
         &self,
-        reqest: Request<ApplicationRequest>,
-    ) -> Result<Response<ApplicationResponse>, Status> {
-        let req = reqest.into_inner();
+        request: Request<ApplicationRequest>,
+    ) -> ApplicationResult<Self::StartApplicationStream> {
+        println!("Client connected from: {:?}", request.remote_addr());
+
+        let req = request.into_inner();
         println!("{}", req.name);
 
         let file_path = format!("bin/{}", req.name);
@@ -41,24 +50,28 @@ impl StreamService for ApplicationService {
                 .unwrap();
         println!("Execution Started... {}", file_path);
 
-        let (tx, rx): (Sender<String>, Receiver<String>) = mpsc::channel();
+        let (tx, rx) = mpsc::channel(128);
 
         tokio::spawn(async move {
-            let output = match child.stdout.take() {
-                Some(mut child_stdout) => {
-                    let mut buf = [0; 1024];
+            while let Some(ref mut child_stdout) = child.stdout.take() {
+                let mut buf = [0; 1024];
 
-                    let lines_read = child_stdout.read(&mut buf).await.unwrap();
-                    println!("Lines read from CHILDSTDOUT: {}", lines_read);
-                    let string_output =
-                        std::str::from_utf8(&buf[0..lines_read]).expect("Failed to convert output to string");
-                    println!("OUTPOUT: {}", string_output);
-                    string_output.to_owned()
+                let lines_read = &child_stdout.read(&mut buf).await.unwrap();
+                println!("Lines read from CHILDSTDOUT: {}", lines_read);
+                let string_output = std::str::from_utf8(&buf[0..*lines_read])
+                    .expect("Failed to convert output to string");
+                println!("Output is: {}", string_output);
+                let resp = ApplicationResponse {
+                    result: string_output.to_owned(),
+                };
+
+                match tx.send(Result::<_, Status>::Ok(resp)).await {
+                    Ok(_) => {}
+                    Err(e) => {
+                        eprintln!("Error queuing to stream: {}", e)
+                    }
                 }
-                None => String::from("NO OUTPUT"),
-            };
-            println!("Output is: {}", output);
-            tx.send(output).expect("Could not send to receiver");
+            }
         });
 
         tokio::spawn(async move {
@@ -70,27 +83,30 @@ impl StreamService for ApplicationService {
             }
         });
 
-        println!("Reached here");
+        let out_stream = ReceiverStream::new(rx);
 
-        // Deletes the generated bin file
-        server::file_io::delete_file_async(&file_path).await;
+        // // Deletes the generated bin file
+        // server::file_io::delete_file_async(&file_path).await;
 
-        Ok(Response::new(ApplicationResponse {
-            result: rx.recv().expect("Failed to receive on tx"),
-        }))
+        Ok(Response::new(
+            Box::pin(out_stream) as Self::StartApplicationStream
+        ))
     }
 
-    async fn stream_input(
-        &self,
-        reqest: Request<Input>,
-    ) -> Result<Response<ApplicationResponse>, Status> {
-        let req = reqest.into_inner();
-        println!("{}", req.input);
+    // type StreamInputStream = ResponseStream;
 
-        Ok(Response::new(ApplicationResponse {
-            result: String::from("Hi there, you happly?"),
-        }))
-    }
+    // fn stream_input(
+    //     &self,
+    //     req: Request<Streaming<InputRequest>>,
+    // ) -> ApplicationResult<Self::StreamInputStream> {
+    //     let mut in_stream = req.into_inner();
+
+    //     // println!("{}", req.input);
+
+    //     // Ok(Response::new(ApplicationResponse {
+    //     //     result: String::from("Hi there, you happly?"),
+    //     // }))
+    // }
 }
 
 #[tokio::main]
@@ -105,7 +121,7 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let addr = consts::ADDRESS.parse()?;
 
-    let application_service = ApplicationService::default();
+    let application_service = RaeServer::default();
 
     Server::builder()
         .add_service(StreamServiceServer::new(application_service))

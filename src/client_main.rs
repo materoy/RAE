@@ -47,7 +47,12 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let response = application_client.start_application(request).await?;
 
-    println!("Response: {:?}", response);
+    let mut stream = response.into_inner();
+
+    while let Some(item) = stream.message().await? {
+        println!("GOT SOME RESPONSE !");
+        println!("{}", item.result);
+    }
 
     Ok(())
 }

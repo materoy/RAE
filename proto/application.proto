@@ -2,12 +2,6 @@ syntax = "proto3";
 
 package application;
 
-service StreamService {
-    rpc StartApplication (ApplicationRequest) returns (ApplicationResponse);
-
-    rpc StreamInput(Input) returns (ApplicationResponse);
-}
-
 message ApplicationRequest {
     string name = 1;
     bytes executable = 2;
@@ -18,10 +12,16 @@ message ApplicationRequest {
     repeated string envv = 7;
 }
 
-message Input {
+message InputRequest {
     string input = 1;
 }
 
 message ApplicationResponse {
     string result = 1;
+}
+
+service StreamService {
+    rpc StartApplication (ApplicationRequest) returns (stream ApplicationResponse);
+
+    // rpc StreamInput(stream InputRequest) returns (stream ApplicationResponse);
 }
