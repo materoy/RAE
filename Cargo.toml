@@ -22,6 +22,9 @@ path = "src/samples/hello_world.rs"
 name = "sample-input-echo"
 path = "src/samples/input_echo.rs"
 
+[[bin]]
+name = "sample-input-output-stream"
+path = "src/samples/input_output_stream.rs"
 
 [dependencies]
 tokio = { version = "1.18.2", features = ["full", "macros", "rt-multi-thread"] }

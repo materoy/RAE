@@ -15,7 +15,7 @@ pub mod consts;
 pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = env::args().skip(1).collect::<Vec<String>>();
     // let default_program_path = "target/debug/sample-hello-world";
-    let default_program_path = "target/debug/sample-input-echo";
+    let default_program_path = "target/debug/sample-input-output-stream";
     let program_path = match args.first() {
         Some(title) => match title.as_str() {
             "input-echo" => "target/debug/sample-input-echo",
@@ -39,7 +39,7 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
         name: String::from(program_path.split('/').last().unwrap()),
         executable: bin.to_vec(),
         execute_command: String::from("./"),
-        data: String::from("Just input"),
+        data: String::from(""),
         path: String::from(""),
         argv: Vec::new(),
         envv: Vec::new(),

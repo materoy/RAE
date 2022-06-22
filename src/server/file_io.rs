@@ -15,16 +15,16 @@ pub async fn create_bin_file(file_name: &str) -> File {
     file
 }
 
-pub async fn delete_file_async(file_name: &str) {
-    match tokio::fs::remove_file(file_name).await {
-        Ok(_) => {
-            println!("File deleted successfully")
-        }
-        Err(e) => {
-            eprintln!("Error deleting file: {}", e);
-        }
-    }
-}
+// pub async fn delete_file_async(file_name: &str) {
+//     match tokio::fs::remove_file(file_name).await {
+//         Ok(_) => {
+//             println!("File deleted successfully")
+//         }
+//         Err(e) => {
+//             eprintln!("Error deleting file: {}", e);
+//         }
+//     }
+// }
 
 pub fn delete_file_sync(file_name: &str) {
     match std::fs::remove_file(file_name) {

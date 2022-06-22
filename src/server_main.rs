@@ -53,7 +53,7 @@ impl StreamService for RaeServer {
         let (tx, rx) = mpsc::channel(128);
 
         tokio::spawn(async move {
-            while let Some(ref mut child_stdout) = child.stdout.take() {
+            if let Some(ref mut child_stdout) = child.stdout.take() {
                 let mut buf = [0; 1024];
 
                 let lines_read = &child_stdout.read(&mut buf).await.unwrap();
@@ -71,6 +71,10 @@ impl StreamService for RaeServer {
                         eprintln!("Error queuing to stream: {}", e)
                     }
                 }
+            } else {
+                println!("NO OUTPUT");
+                // // Deletes the generated bin file
+                // server::file_io::delete_file_async(&file_path).await;
             }
         });
 
@@ -85,28 +89,10 @@ impl StreamService for RaeServer {
 
         let out_stream = ReceiverStream::new(rx);
 
-        // // Deletes the generated bin file
-        // server::file_io::delete_file_async(&file_path).await;
-
         Ok(Response::new(
             Box::pin(out_stream) as Self::StartApplicationStream
         ))
     }
-
-    // type StreamInputStream = ResponseStream;
-
-    // fn stream_input(
-    //     &self,
-    //     req: Request<Streaming<InputRequest>>,
-    // ) -> ApplicationResult<Self::StreamInputStream> {
-    //     let mut in_stream = req.into_inner();
-
-    //     // println!("{}", req.input);
-
-    //     // Ok(Response::new(ApplicationResponse {
-    //     //     result: String::from("Hi there, you happly?"),
-    //     // }))
-    // }
 }
 
 #[tokio::main]
