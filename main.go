@@ -16,6 +16,7 @@ func readFile(path *string) []byte {
 }
 
 func main() {
+	println("Running rae ... ")
 	isServer := flag.Bool("server", false, "")
 	program := flag.String("program", "samples/input_handler/input_handler", "Path to program to execute")
 	host := flag.String("host", getOutBoundIP().String(), "Hostname for the node to connect to")
