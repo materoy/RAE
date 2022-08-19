@@ -11,6 +11,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{transport::Server, Request, Response, Status};
 mod application;
+mod file_io;
 mod server;
 
 pub mod application_proto {
@@ -39,7 +40,7 @@ impl StreamService for RaeServer {
         println!("{}", req.name);
 
         let file_path = format!("bin/{}", req.name);
-        let mut file = server::file_io::create_bin_file(&file_path).await;
+        let mut file = file_io::create_bin_file(&file_path).await;
 
         file.write_all(&req.executable)
             .expect("Failed to write to file");
@@ -97,13 +98,7 @@ impl StreamService for RaeServer {
 
 #[tokio::main]
 pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ctrlc::set_handler(move || {
-        server::file_io::delete_all_in_dir("bin");
-        println!("SIGTERM received, cleaning up...");
-        server::file_io::delete_all_in_dir("bin");
-        println!("Clean up complete. Shutting down with exit code 1");
-        exit(1);
-    })?;
+    ctrlc::set_handler(exit_interupt_handler)?;
 
     let addr = consts::ADDRESS.parse()?;
 
@@ -115,4 +110,12 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     Ok(())
+}
+
+fn exit_interupt_handler() {
+    file_io::delete_all_in_dir("bin");
+    println!("SIGTERM received, cleaning up...");
+    file_io::delete_all_in_dir("bin");
+    println!("Clean up complete. Shutting down with exit code 1");
+    exit(1);
 }

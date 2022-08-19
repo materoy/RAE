@@ -4,6 +4,7 @@ use application_proto::stream_service_client::StreamServiceClient;
 use application_proto::ApplicationRequest;
 
 mod client;
+mod file_io;
 
 pub mod application_proto {
     tonic::include_proto!("application");
@@ -30,7 +31,7 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut application_client = StreamServiceClient::connect(addr).await?;
 
     // Send binary file to server
-    let bin = &client::file_io::read_bin_file(program_path);
+    let bin = &file_io::read_bin_file(program_path);
 
     // let mut input = String::new();
     // stdin().read_line(&mut input).unwrap();
